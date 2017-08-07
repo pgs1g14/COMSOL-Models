@@ -26,7 +26,7 @@ j=1; %incremental variable;
 %Liner geometry
 w_tube=0.00517; %impedance tube diameter [m]
 h_r=0.019; %Liner cavity depth - resonator height [m]
-h_slit=0.000635; %Liner hole thickness [m]
+h_h=0.000635; %Liner hole thickness [m]
 POA=0.0366; %percentage of open area of the sample in the holder
 %POA=0.0518; %percentage of open area of the flanged liner sample
 h_in=0.2082; %impedance tube length [m]
@@ -39,7 +39,7 @@ elementFar=24;
 dt_sol=1*10^-4;
 Tfim=0.01;
 
-comment=['Liner Axisimetrical PT thickness ' num2str(h_slit) ' mm ' num2str(SPL) 'dB ' num2str(freq) 'Hz. Impedance tube model with a sample in a holder with POA 3.66%, d=' num2str(d_h) ' mm, h=19.0mm nominal values.'];
+comment=['Liner Axisimetrical PT thickness ' num2str(h_slit) ' m ' num2str(SPL) 'dB ' num2str(freq) 'Hz. Impedance tube model with a sample in a holder with POA 3.66%, d=' num2str(d_h) ' mm, h=19.0mm nominal values.'];
 file=['LinerAxi_PT_155dB_' num2str(freq) 'Hz'];
 %Comsol Instructions Windows
 pasta='C:\Local\Pablo\COMSOL\Circular Axi model\LinerAxi_PT_155dB_1500Hz\';
@@ -68,12 +68,12 @@ model.comments(comment);
 mphsave(model,['../' file '.mph']);
 
 %% Parameters
-model.param.set('w_tube', [num2str(w_tube) '[m]'], 'Tube width');
+model.param.set('d_tube', [num2str(w_tube) '[m]'], 'Tube diameter considering POA=3.66%');
 model.param.set('h_r', [num2str(h_r) '[m]'], 'Resonator height');
-model.param.set('h_slit', [num2str(h_slit) '[m]'], 'Slit thickness');
-model.param.set('w_slit', [num2str(d_h) '[m]'], 'width');
+model.param.set('h_h', [num2str(h_h) '[m]'], 'Slit thickness');
+model.param.set('d_h', [num2str(d_h) '[m]'], 'width');
 model.param.set('h_in', [num2str(h_in) '[m]'], 'Inlet height');
-model.param.set('y0', [num2str(h_in+h_slit/2) '[m]'], 'Inlet location y-coordinate');
+model.param.set('y0', [num2str(h_in+h_h+h_r) '[m]'], 'Inlet location y-coordinate');
 model.param.set('h_tube', [num2str(h_r+h_in+h_slit) '[m]'], 'Total tube length');
 model.param.set('rho0', [num2str(rho) '[kg/m^3]'], 'Density');
 model.param.set('c0', [num2str(c0) '[m/s]'], 'Speed of sound');
@@ -96,103 +96,109 @@ model.component.create('comp1', false);
 
 model.component('comp1').geom.create('geom1', 2);
 
-model.result.table.create('tbl1', 'Table');
-model.result.table.create('tbl2', 'Table');
-model.result.table.create('tbl3', 'Table');
-model.result.table.create('tbl4', 'Table');
-model.result.table.create('tbl5', 'Table');
-model.result.table.create('tbl6', 'Table');
-model.result.table.create('tbl9', 'Table');
-model.result.table.create('tbl10', 'Table');
-model.result.table.create('tbl11', 'Table');
-model.result.table.create('tbl12', 'Table');
-model.result.table.create('tbl13', 'Table');
-model.result.table.create('tbl14', 'Table');
-model.result.table.create('evl2', 'Table');
-model.result.table.create('tbl15', 'Table');
-model.result.table.create('tbl16', 'Table');
 %% Geometry
-model.component('comp1').mesh.create('mesh1');
 
-model.component('comp1').geom('geom1').create('r1', 'Rectangle');
-model.component('comp1').geom('geom1').feature('r1').set('pos', {'0' 'h_tube/2-(h_r+h_slit/2)'});
-model.component('comp1').geom('geom1').feature('r1').set('base', 'center');
-model.component('comp1').geom('geom1').feature('r1').set('layerbottom', false);
-model.component('comp1').geom('geom1').feature('r1').set('layertop', true);
-model.component('comp1').geom('geom1').feature('r1').set('size', {'w_tube' 'h_tube'});
-model.component('comp1').geom('geom1').create('r2', 'Rectangle');
-model.component('comp1').geom('geom1').feature('r2').set('base', 'center');
-model.component('comp1').geom('geom1').feature('r2').set('layername', {'Layer 1'});
-model.component('comp1').geom('geom1').feature('r2').setIndex('layer', '(w_tube-w_slit)/2', 0);
-model.component('comp1').geom('geom1').feature('r2').set('layerleft', true);
-model.component('comp1').geom('geom1').feature('r2').set('layerright', true);
-model.component('comp1').geom('geom1').feature('r2').set('layerbottom', false);
-model.component('comp1').geom('geom1').feature('r2').set('size', {'w_tube' 'h_slit'});
-model.component('comp1').geom('geom1').create('r3', 'Rectangle');
-model.component('comp1').geom('geom1').feature('r3').set('base', 'center');
-model.component('comp1').geom('geom1').feature('r3').set('size', {'10*w_slit' '40*h_slit'});
-model.component('comp1').geom('geom1').create('uni1', 'Union');
-model.component('comp1').geom('geom1').feature('uni1').selection('input').set({'r1' 'r2' 'r3'});
-model.component('comp1').geom('geom1').create('del1', 'Delete');
-model.component('comp1').geom('geom1').feature('del1').selection('input').init(2);
-model.component('comp1').geom('geom1').feature('del1').selection('input').set('uni1(1)', [2 5 8 9]);
+
 model.component('comp1').geom('geom1').create('pol1', 'Polygon');
 model.component('comp1').geom('geom1').feature('pol1').set('type', 'open');
-model.component('comp1').geom('geom1').feature('pol1').set('x', '-w_tube/2 w_tube/2');
-model.component('comp1').geom('geom1').feature('pol1').set('y', '40*h_slit 40*h_slit');
+model.component('comp1').geom('geom1').feature('pol1').set('x', '0 d_tube/2');
+model.component('comp1').geom('geom1').feature('pol1').set('y', '40*d_h 40*d_h');
 model.component('comp1').geom('geom1').create('pol2', 'Polygon');
 model.component('comp1').geom('geom1').feature('pol2').set('type', 'open');
-model.component('comp1').geom('geom1').feature('pol2').set('x', '-w_tube/2 w_tube/2');
-model.component('comp1').geom('geom1').feature('pol2').set('y', '0.07 0.07');
+model.component('comp1').geom('geom1').feature('pol2').set('x', '0 d_tube/2');
+model.component('comp1').geom('geom1').feature('pol2').set('y', '0.07+h_h+h_r 0.07+h_h+h_r');
 model.component('comp1').geom('geom1').create('pt1', 'Point');
-model.component('comp1').geom('geom1').feature('pt1').setIndex('p', 'w_tube/2', 0, 0);
-model.component('comp1').geom('geom1').feature('pt1').setIndex('p', '0.119', 1, 0);
+model.component('comp1').geom('geom1').feature('pt1').setIndex('p', 'd_tube/2', 0, 0);
+model.component('comp1').geom('geom1').feature('pt1').setIndex('p', '0.119+h_h+h_r', 1, 0);
 model.component('comp1').geom('geom1').create('pt2', 'Point');
-model.component('comp1').geom('geom1').feature('pt2').setIndex('p', 'w_tube/2', 0, 0);
-model.component('comp1').geom('geom1').feature('pt2').setIndex('p', '0.099', 1, 0);
+model.component('comp1').geom('geom1').feature('pt2').setIndex('p', 'd_tube/2', 0, 0);
+model.component('comp1').geom('geom1').feature('pt2').setIndex('p', '0.099+h_h+h_r', 1, 0);
 model.component('comp1').geom('geom1').run;
-%% Variables
+%% Variables and materials
 model.component('comp1').variable.create('var1');
 model.component('comp1').variable('var1').set('Pin', 'p0*sin(omega0*t+k0*(y-y0))', 'Incident pressure');
 model.component('comp1').variable('var1').set('rhoL', 'rho0+p/c0^2', 'Linear density relation for air');
 model.component('comp1').variable('var1').set('rhoNL', 'rho0+p/c0^2-1/(rho0*c0^4)*(beta-1)*p^2', 'Nonlinear density relation for air');
 
-model.component('comp1').material.create('mat1', 'Common');
-model.component('comp1').material('mat1').propertyGroup('def').func.create('eta', 'Piecewise');
-model.component('comp1').material('mat1').propertyGroup('def').func.create('Cp', 'Piecewise');
-model.component('comp1').material('mat1').propertyGroup('def').func.create('rho', 'Analytic');
-model.component('comp1').material('mat1').propertyGroup('def').func.create('k', 'Piecewise');
-model.component('comp1').material('mat1').propertyGroup('def').func.create('cs', 'Analytic');
-model.component('comp1').material('mat1').propertyGroup.create('RefractiveIndex', 'Refractive index');
-model.component('comp1').material('mat1').propertyGroup.create('idealGas', 'Ideal gas');
+
+model.component('comp1').material('mat1').label('Air');
+model.component('comp1').material('mat1').set('family', 'air');
+model.component('comp1').material('mat1').propertyGroup('def').func('eta').set('arg', 'T');
+model.component('comp1').material('mat1').propertyGroup('def').func('eta').set('pieces', {'200.0' '1600.0' '-8.38278E-7+8.35717342E-8*T^1-7.69429583E-11*T^2+4.6437266E-14*T^3-1.06585607E-17*T^4'});
+model.component('comp1').material('mat1').propertyGroup('def').func('Cp').set('arg', 'T');
+model.component('comp1').material('mat1').propertyGroup('def').func('Cp').set('pieces', {'200.0' '1600.0' '1047.63657-0.372589265*T^1+9.45304214E-4*T^2-6.02409443E-7*T^3+1.2858961E-10*T^4'});
+model.component('comp1').material('mat1').propertyGroup('def').func('rho').set('expr', 'pA*0.02897/8.314/T');
+model.component('comp1').material('mat1').propertyGroup('def').func('rho').set('args', {'pA' 'T'});
+model.component('comp1').material('mat1').propertyGroup('def').func('rho').set('dermethod', 'manual');
+model.component('comp1').material('mat1').propertyGroup('def').func('rho').set('argders', {'pA' 'd(pA*0.02897/8.314/T,pA)'; 'T' 'd(pA*0.02897/8.314/T,T)'});
+model.component('comp1').material('mat1').propertyGroup('def').func('rho').set('plotargs', {'pA' '0' '1'; 'T' '0' '1'});
+model.component('comp1').material('mat1').propertyGroup('def').func('k').set('arg', 'T');
+model.component('comp1').material('mat1').propertyGroup('def').func('k').set('pieces', {'200.0' '1600.0' '-0.00227583562+1.15480022E-4*T^1-7.90252856E-8*T^2+4.11702505E-11*T^3-7.43864331E-15*T^4'});
+model.component('comp1').material('mat1').propertyGroup('def').func('cs').set('expr', 'sqrt(1.4*287*T)');
+model.component('comp1').material('mat1').propertyGroup('def').func('cs').set('args', {'T'});
+model.component('comp1').material('mat1').propertyGroup('def').func('cs').set('dermethod', 'manual');
+model.component('comp1').material('mat1').propertyGroup('def').func('cs').set('argders', {'T' 'd(sqrt(1.4*287*T),T)'});
+model.component('comp1').material('mat1').propertyGroup('def').func('cs').set('plotargs', {'T' '0' '1'});
+model.component('comp1').material('mat1').propertyGroup('def').set('relpermeability', {'1' '0' '0' '0' '1' '0' '0' '0' '1'});
+model.component('comp1').material('mat1').propertyGroup('def').set('relpermittivity', {'1' '0' '0' '0' '1' '0' '0' '0' '1'});
+model.component('comp1').material('mat1').propertyGroup('def').set('dynamicviscosity', 'eta(T[1/K])[Pa*s]');
+model.component('comp1').material('mat1').propertyGroup('def').set('ratioofspecificheat', '1.4');
+model.component('comp1').material('mat1').propertyGroup('def').set('electricconductivity', {'0[S/m]' '0' '0' '0' '0[S/m]' '0' '0' '0' '0[S/m]'});
+model.component('comp1').material('mat1').propertyGroup('def').set('heatcapacity', 'Cp(T[1/K])[J/(kg*K)]');
+model.component('comp1').material('mat1').propertyGroup('def').set('density', 'rho(pA[1/Pa],T[1/K])[kg/m^3]');
+model.component('comp1').material('mat1').propertyGroup('def').set('thermalconductivity', {'k(T[1/K])[W/(m*K)]' '0' '0' '0' 'k(T[1/K])[W/(m*K)]' '0' '0' '0' 'k(T[1/K])[W/(m*K)]'});
+model.component('comp1').material('mat1').propertyGroup('def').set('soundspeed', 'cs(T[1/K])[m/s]');
+model.component('comp1').material('mat1').propertyGroup('def').set('bulkviscosity', '0');
+model.component('comp1').material('mat1').propertyGroup('def').addInput('temperature');
+model.component('comp1').material('mat1').propertyGroup('def').addInput('pressure');
+model.component('comp1').material('mat1').propertyGroup('RefractiveIndex').set('n', '');
+model.component('comp1').material('mat1').propertyGroup('RefractiveIndex').set('ki', '');
+model.component('comp1').material('mat1').propertyGroup('RefractiveIndex').set('n', {'1' '0' '0' '0' '1' '0' '0' '0' '1'});
+model.component('comp1').material('mat1').propertyGroup('RefractiveIndex').set('ki', {'0' '0' '0' '0' '0' '0' '0' '0' '0'});
+model.component('comp1').material('mat1').propertyGroup('idealGas').set('Rs', '287[J/kg/K]');
+model.component('comp1').material('mat1').propertyGroup('idealGas').addInput('temperature');
+model.component('comp1').material('mat1').propertyGroup('idealGas').addInput('pressure');
+
 
 model.component('comp1').cpl.create('intop1', 'Integration');
 model.component('comp1').cpl.create('aveop1', 'Average');
 model.component('comp1').cpl.create('aveop2', 'Average');
 model.component('comp1').cpl.create('aveop3', 'Average');
 model.component('comp1').cpl('intop1').selection.geom('geom1', 1);
-model.component('comp1').cpl('intop1').selection.set([10]);
+%model.component('comp1').cpl('intop1').selection.set([11]);
 model.component('comp1').cpl('aveop1').selection.geom('geom1', 1);
-model.component('comp1').cpl('aveop1').selection.set([5 15 19 22 26]);
+%model.component('comp1').cpl('aveop1').selection.set([5 15 19 22 26]);
 model.component('comp1').cpl('aveop2').selection.geom('geom1', 1);
-model.component('comp1').cpl('aveop2').selection.set([7]);
+%model.component('comp1').cpl('aveop2').selection.set([7]);
 model.component('comp1').cpl('aveop3').selection.geom('geom1', 1);
-model.component('comp1').cpl('aveop3').selection.set([9]);
+%model.component('comp1').cpl('aveop3').selection.set([9]);
 %% Physics
 model.component('comp1').physics.create('actd', 'TransientPressureAcoustics', 'geom1');
 model.component('comp1').physics('actd').field('pressure').field('p2');
-model.component('comp1').physics('actd').selection.set([3 4]);
+model.component('comp1').physics('actd').selection.set([4 5]);
 model.component('comp1').physics('actd').create('pwr1', 'PlaneWaveRadiation', 1);
-model.component('comp1').physics('actd').feature('pwr1').selection.set([10]);
+model.component('comp1').physics('actd').feature('pwr1').selection.set([11]);
 model.component('comp1').physics('actd').feature('pwr1').create('ipf1', 'IncidentPressureField', 1);
 model.component('comp1').physics('actd').create('nvel1', 'NormalVelocity', 1);
-model.component('comp1').physics('actd').feature('nvel1').selection.set([7]);
+model.component('comp1').physics('actd').feature('nvel1').selection.set([8]);
 model.component('comp1').physics.create('spf', 'LaminarFlow', 'geom1');
-model.component('comp1').physics('spf').selection.set([1 2 5 6 7]);
+model.component('comp1').physics('spf').selection.set([1 2 3]);
 model.component('comp1').physics('spf').create('bs1', 'BoundaryStress', 1);
-model.component('comp1').physics('spf').feature('bs1').selection.set([7]);
+model.component('comp1').physics('spf').feature('bs1').selection.set([8]);
 model.component('comp1').physics('spf').create('wall2', 'Wall', 1);
 model.component('comp1').physics('spf').feature('wall2').selection.set([1 2 3 4 5 24 26 27 28]);
+
+model.component('comp1').physics('actd').feature('tpam1').set('rho', 'rho0');
+model.component('comp1').physics('actd').feature('tpam1').set('c', 'c0');
+model.component('comp1').physics('actd').feature('pwr1').feature('ipf1').set('p', 'Pin');
+model.component('comp1').physics('actd').feature('nvel1').set('Type', 'vel');
+model.component('comp1').physics('actd').feature('nvel1').set('vel', {'u'; 'v'; '0'});
+model.component('comp1').physics('spf').prop('PhysicalModelProperty').set('Compressibility', 'CompressibleMALT03');
+model.component('comp1').physics('spf').feature('fp1').set('rho', 'rhoL');
+model.component('comp1').physics('spf').feature('bs1').set('BoundaryCondition', 'NormalStress');
+model.component('comp1').physics('spf').feature('bs1').set('f0', 'p2');
+model.component('comp1').physics('spf').feature('wall2').set('BoundaryCondition', 'Slip');
+
 %% Mesh
 model.component('comp1').mesh('mesh1').create('map1', 'Map');
 model.component('comp1').mesh('mesh1').create('ftri1', 'FreeTri');
@@ -254,6 +260,22 @@ model.component('comp1').mesh('mesh1').feature('ftri1').feature('size3').set('hg
 model.component('comp1').mesh('mesh1').feature('ftri1').feature('cr1').selection('boundary').set([13 15 17 20 21 22]);
 model.component('comp1').mesh('mesh1').run;
 %% Tables
+model.result.table.create('tbl1', 'Table');
+model.result.table.create('tbl2', 'Table');
+model.result.table.create('tbl3', 'Table');
+model.result.table.create('tbl4', 'Table');
+model.result.table.create('tbl5', 'Table');
+model.result.table.create('tbl6', 'Table');
+model.result.table.create('tbl9', 'Table');
+model.result.table.create('tbl10', 'Table');
+model.result.table.create('tbl11', 'Table');
+model.result.table.create('tbl12', 'Table');
+model.result.table.create('tbl13', 'Table');
+model.result.table.create('tbl14', 'Table');
+model.result.table.create('evl2', 'Table');
+model.result.table.create('tbl15', 'Table');
+model.result.table.create('tbl16', 'Table');
+
 model.result.table('tbl1').comments('Point Evaluation 1 (Pin)');
 model.result.table('tbl1').label('Point Evaluation 1 (Pin)');
 model.result.table('tbl2').comments('Point Evaluation 1 (Pout)');
@@ -279,69 +301,10 @@ model.result.table('tbl15').comments('P plane ac (aveop3(p2))');
 model.result.table('tbl16').label('Av vel Plane Acoustic');
 model.result.table('tbl16').comments('V plane ac (aveop3(actd.a_inst/(2*pi*f0)))');
 
-model.component('comp1').view('view1').axis.set('xmin', -0.012346153147518635);
-model.component('comp1').view('view1').axis.set('xmax', 0.01584230735898018);
-model.component('comp1').view('view1').axis.set('ymin', -0.007656451314687729);
-model.component('comp1').view('view1').axis.set('ymax', 0.023603826761245728);
-model.component('comp1').view('view1').axis.set('abstractviewlratio', 0.0742705687880516);
-model.component('comp1').view('view1').axis.set('abstractviewrratio', 0.08861720561981201);
-model.component('comp1').view('view1').axis.set('abstractviewbratio', 0.06006757169961929);
-model.component('comp1').view('view1').axis.set('abstractviewtratio', -0.8190760612487793);
-model.component('comp1').view('view1').axis.set('abstractviewxscale', 5.2716935897478834E-5);
-model.component('comp1').view('view1').axis.set('abstractviewyscale', 5.271693953545764E-5);
-
-model.component('comp1').material('mat1').label('Air');
-model.component('comp1').material('mat1').set('family', 'air');
-model.component('comp1').material('mat1').propertyGroup('def').func('eta').set('arg', 'T');
-model.component('comp1').material('mat1').propertyGroup('def').func('eta').set('pieces', {'200.0' '1600.0' '-8.38278E-7+8.35717342E-8*T^1-7.69429583E-11*T^2+4.6437266E-14*T^3-1.06585607E-17*T^4'});
-model.component('comp1').material('mat1').propertyGroup('def').func('Cp').set('arg', 'T');
-model.component('comp1').material('mat1').propertyGroup('def').func('Cp').set('pieces', {'200.0' '1600.0' '1047.63657-0.372589265*T^1+9.45304214E-4*T^2-6.02409443E-7*T^3+1.2858961E-10*T^4'});
-model.component('comp1').material('mat1').propertyGroup('def').func('rho').set('expr', 'pA*0.02897/8.314/T');
-model.component('comp1').material('mat1').propertyGroup('def').func('rho').set('args', {'pA' 'T'});
-model.component('comp1').material('mat1').propertyGroup('def').func('rho').set('dermethod', 'manual');
-model.component('comp1').material('mat1').propertyGroup('def').func('rho').set('argders', {'pA' 'd(pA*0.02897/8.314/T,pA)'; 'T' 'd(pA*0.02897/8.314/T,T)'});
-model.component('comp1').material('mat1').propertyGroup('def').func('rho').set('plotargs', {'pA' '0' '1'; 'T' '0' '1'});
-model.component('comp1').material('mat1').propertyGroup('def').func('k').set('arg', 'T');
-model.component('comp1').material('mat1').propertyGroup('def').func('k').set('pieces', {'200.0' '1600.0' '-0.00227583562+1.15480022E-4*T^1-7.90252856E-8*T^2+4.11702505E-11*T^3-7.43864331E-15*T^4'});
-model.component('comp1').material('mat1').propertyGroup('def').func('cs').set('expr', 'sqrt(1.4*287*T)');
-model.component('comp1').material('mat1').propertyGroup('def').func('cs').set('args', {'T'});
-model.component('comp1').material('mat1').propertyGroup('def').func('cs').set('dermethod', 'manual');
-model.component('comp1').material('mat1').propertyGroup('def').func('cs').set('argders', {'T' 'd(sqrt(1.4*287*T),T)'});
-model.component('comp1').material('mat1').propertyGroup('def').func('cs').set('plotargs', {'T' '0' '1'});
-model.component('comp1').material('mat1').propertyGroup('def').set('relpermeability', {'1' '0' '0' '0' '1' '0' '0' '0' '1'});
-model.component('comp1').material('mat1').propertyGroup('def').set('relpermittivity', {'1' '0' '0' '0' '1' '0' '0' '0' '1'});
-model.component('comp1').material('mat1').propertyGroup('def').set('dynamicviscosity', 'eta(T[1/K])[Pa*s]');
-model.component('comp1').material('mat1').propertyGroup('def').set('ratioofspecificheat', '1.4');
-model.component('comp1').material('mat1').propertyGroup('def').set('electricconductivity', {'0[S/m]' '0' '0' '0' '0[S/m]' '0' '0' '0' '0[S/m]'});
-model.component('comp1').material('mat1').propertyGroup('def').set('heatcapacity', 'Cp(T[1/K])[J/(kg*K)]');
-model.component('comp1').material('mat1').propertyGroup('def').set('density', 'rho(pA[1/Pa],T[1/K])[kg/m^3]');
-model.component('comp1').material('mat1').propertyGroup('def').set('thermalconductivity', {'k(T[1/K])[W/(m*K)]' '0' '0' '0' 'k(T[1/K])[W/(m*K)]' '0' '0' '0' 'k(T[1/K])[W/(m*K)]'});
-model.component('comp1').material('mat1').propertyGroup('def').set('soundspeed', 'cs(T[1/K])[m/s]');
-model.component('comp1').material('mat1').propertyGroup('def').set('bulkviscosity', '0');
-model.component('comp1').material('mat1').propertyGroup('def').addInput('temperature');
-model.component('comp1').material('mat1').propertyGroup('def').addInput('pressure');
-model.component('comp1').material('mat1').propertyGroup('RefractiveIndex').set('n', '');
-model.component('comp1').material('mat1').propertyGroup('RefractiveIndex').set('ki', '');
-model.component('comp1').material('mat1').propertyGroup('RefractiveIndex').set('n', {'1' '0' '0' '0' '1' '0' '0' '0' '1'});
-model.component('comp1').material('mat1').propertyGroup('RefractiveIndex').set('ki', {'0' '0' '0' '0' '0' '0' '0' '0' '0'});
-model.component('comp1').material('mat1').propertyGroup('idealGas').set('Rs', '287[J/kg/K]');
-model.component('comp1').material('mat1').propertyGroup('idealGas').addInput('temperature');
-model.component('comp1').material('mat1').propertyGroup('idealGas').addInput('pressure');
-
 model.component('comp1').cpl('aveop1').label('Average Liner');
 model.component('comp1').cpl('aveop2').label('Average Plane Interface');
 model.component('comp1').cpl('aveop3').label('Average Plane Acoustic');
 
-model.component('comp1').physics('actd').feature('tpam1').set('rho', 'rho0');
-model.component('comp1').physics('actd').feature('tpam1').set('c', 'c0');
-model.component('comp1').physics('actd').feature('pwr1').feature('ipf1').set('p', 'Pin');
-model.component('comp1').physics('actd').feature('nvel1').set('Type', 'vel');
-model.component('comp1').physics('actd').feature('nvel1').set('vel', {'u'; 'v'; '0'});
-model.component('comp1').physics('spf').prop('PhysicalModelProperty').set('Compressibility', 'CompressibleMALT03');
-model.component('comp1').physics('spf').feature('fp1').set('rho', 'rhoL');
-model.component('comp1').physics('spf').feature('bs1').set('BoundaryCondition', 'NormalStress');
-model.component('comp1').physics('spf').feature('bs1').set('f0', 'p2');
-model.component('comp1').physics('spf').feature('wall2').set('BoundaryCondition', 'Slip');
 
 model.frame('material1').sorder(1);
 
@@ -384,16 +347,17 @@ model.study('std1').feature('time').set('plot', true);
 model.study('std1').feature('time').set('probesel', 'none');
 
 model.sol('sol1').attach('std1');
-model.sol('sol1').feature('v1').set('clist', {'range(0,T0/30,Tend)'});
+model.sol('sol1').feature('v1').set('clist', {'range(0,dt_sol,Tend)'});
 model.sol('sol1').feature('t1').set('control', 'user');
-model.sol('sol1').feature('t1').set('tlist', 'range(0,T0/30,Tend)');
-model.sol('sol1').feature('t1').set('rtol', 0.001);
+model.sol('sol1').feature('t1').set('tlist', 'range(0,dt_sol,Tend)');
+model.sol('sol1').feature('t1').set('rtol', '1e-3');
 model.sol('sol1').feature('t1').set('plot', true);
 model.sol('sol1').feature('t1').set('probesel', 'none');
 model.sol('sol1').feature('t1').feature('fc1').set('dtech', 'auto');
 
 mphsave(model,['C:\Local\Pablo\COMSOL\Perforated 5.4% Laminar flow PT\Multiphysics model\Result files\' file '\MATLAB\' file '.m']);
 mphsave(model,['C:\Local\Pablo\COMSOL\Perforated 5.4% Laminar flow PT\Multiphysics model\COMSOL files\' file '.mph']);
+mphsave(model,['../' file '.mph'])
 
 model.sol('sol1').runAll;
 %% Set Results
@@ -793,7 +757,7 @@ model.result.export('plot3').set('exporttype', 'vtu');
 model.result.export('plot3').set('filename', 'VelocityTestVTK.vtu');
 
 %% Save
-mphsave(model,['../' file '.mph']);
+mphsave(model,['../' file '_solved.mph']);
 
 model.result().table('tbl3').save([pasta file '\Data\PLine.txt']);
 model.result().table('tbl4').save([pasta file '\Data\VLine.txt']);
