@@ -264,6 +264,8 @@ model.mesh('mesh1').feature('map1').feature('size1').set('hauto', 2);
 model.mesh('mesh1').feature('map1').feature('size1').set('custom', 'on');
 model.mesh('mesh1').feature('map1').feature('size1').set('hmaxactive', true);
 model.mesh('mesh1').feature('map1').feature('size1').set('hmax', 'c0*dt_sol/5');
+
+
 model.mesh('mesh1').feature('ftri1').feature('size1').set('custom', 'on');
 model.mesh('mesh1').feature('ftri1').feature('size1').set('hminactive', true);
 model.mesh('mesh1').feature('ftri1').feature('size1').set('hmaxactive', true);

@@ -1,16 +1,15 @@
 function LinerAxi_PT_155dB_parametric_v5_2(cycles,freq)
 %
-% LinerAxi_PT_155dB_600Hz_v5_2.m
+% LinerAxi_PT_155dB_parametric_v5_2.m
 %
 % Model exported on Aug 9 2017, 17:45 by COMSOL 5.2.1.229.
-% Edited to include parametric analysis on MATLAB
-
+% Edited to include parametric analysis on MATLAB on 11/08/2017
+%   freq=600;
+%   cycles=5;
 %% Constants
 tic;
 %Model physical constants
 %------------------------------------------------
-freq=2000;
-Tstart=cycles/freq;
 w=2*pi()*freq; %Angular frequency
 TC=20; %Temperature of the measurements to run the simulation ºC
 T= 273.15+TC; %Temperature of the fluid [K]
@@ -20,26 +19,27 @@ rho=ATMp/(R*T); %Specific gas density [kg/m^3]
 mi= 1.8205e-5;%dynamic viscosity [kg/m.s]
 ni=mi/rho; %kinematic viscosity [m^2/s]
 c0= 331.29*sqrt(1+((T-273.15)/273.15)); %Fluid sound velocity [m/s]
-x1=0.099+0.02; %Mic 1 position
-x2=0.099; %Mic 2 position
 SPL=155; %Sound pressure level dB
 k0=w/c0; %wave number
-terms=1; %Number of terms related to tone components
-j=1; %incremental variable;
+
 %Liner geometry
 w_tube=0.029; %impedance tube diameter [m]
-h_r=0.0191; %Liner cavity depth - resonator height [m]
-h_slit=0.0006; %Liner slit thickness [m]
+h_r=0.019; %Liner cavity depth - resonator height [m]
+h_h=0.000635; %Liner slit thickness [m]
 POA=0.0366; %percentage of open area of the sample in the holder
-%POA=0.0518; %percentage of open area of the flanged liner sample
 h_in=0.2082; %impedance tube length [m]
 d_h=POA*w_tube; %Hole diameter 1,0614 mm - on the holder, Hole diameter 1,5022 mm - flanged
-yPlane1=0.07;
-yPlane2=40*h_slit;
+yPlane1=0.07; %Acoustics
+yPlane2=40*h_h; %Multiphysics
+x1=0.099+0.02; %Mic 1 position
+x2=0.099; %Mic 2 position
 elementHole=2;
 elementNear=15;
 elementFar=24;
 
+%-----
+ppl=12; % Points per lambda to have good description on time domain
+%-----
 %% Start Model
 import com.comsol.model.*
 import com.comsol.model.util.*
@@ -55,34 +55,33 @@ import com.comsol.model.util.*
 
     model.comments(['LinerAxi PT 155dB 500Hz v5.2\n\nLinerAxi PT 155dB 600Hz v5.2\n\nLiner Axisimetrical PT thickness 0.000635 m 155dB 500Hz. Impedance tube model with a sample in a holder with POA 3.66%, d=0.00099 m, h=0.019m nominal values.']);
 %% Parameters
-    model.param.set('d_tube', 'sqrt(d_h^2/POA) [m]', 'Tube diameter considering POA=3.66%');
-    model.param.set('h_r', '0.019[m]', 'Resonator height');
-    model.param.set('h_h', '0.000635[m]', 'Hole thickness');
-    model.param.set('d_h', '0.00099[m]', 'Hole diameter');
-    model.param.set('h_in', '0.2082[m]', 'Inlet height');
-    model.param.set('y0', '0.22783[m]', 'Inlet location y-coordinate');
-    model.param.set('h_tube', '0.22783[m]', 'Total tube length');
-    model.param.set('rho0', '1.2056[kg/m^3]', 'Density');
-    model.param.set('c0', '343.2043[m/s]', 'Speed of sound');
-    model.param.set('beta', '1.2', 'Nonlinear coefficent');
-    model.param.set('L0', '155', 'Incident wave amplitude dB');
-    model.param.set('p0', '10^(L0/20)*2*10^-5[Pa]', 'Incident wave amplitude Pa');
+    model.param.set('h_r', [num2str(h_r) '[m]'], 'Resonator height');
+    model.param.set('h_h', [num2str(h_h) '[m]'], 'Hole thickness');
+    model.param.set('d_h', [num2str(d_h) '[m]'], 'Hole diameter');
+    model.param.set('h_in', [num2str(h_in) '[m]'], 'Inlet height');
+    model.param.set('y0', [num2str(h_r+h_h+h_in) '[m]'], 'Inlet location y-coordinate');
+    model.param.set('rho0', [num2str(rho) '[kg/m^3]'], 'Density');
+    model.param.set('c0', [num2str(c0) '[m/s]'], 'Speed of sound');
+    model.param.set('yPlane1', [num2str(yPlane1) '[m]'], 'Distance to plane 1');
+    model.param.set('yPlane2', [num2str(yPlane2) '[m]'], 'Distance to plane 2');
+    model.param.set('POA', num2str(POA) , 'Percentage of open area');model.param.set('beta', '1.2', 'Nonlinear coefficent');
+    model.param.set('L0', num2str(SPL), 'Incident wave amplitude dB');
     model.param.set('f0', [num2str(freq) '[Hz]'], 'Driving frequency');
-    model.param.set('cycles', [num2str(cycles)], 'Cycles to extract from the beggining');
+    model.param.set('cycles', num2str(cycles), 'Cycles to extract from the beggining');
+    model.param.set('k0', [num2str(k0) '[1/m]'], 'Wave number at f0');
+    model.param.set('ppl', num2str(ppl), 'Points per lambda');
+    model.param.set('d_tube', 'sqrt(d_h^2/POA) [m]', 'Tube diameter considering POA=3.66%');
+    model.param.set('p0', '10^(L0/20)*2*10^-5[Pa]', 'Incident wave amplitude Pa');
     model.param.set('Tstart', 'cycles/f0', 'Start time for a number of cycles');
     model.param.set('lambda0', 'c0/f0[m]', 'Wavelength at f0');
-    model.param.set('dvisc', '220[um]*sqrt(100[Hz]/f0)', 'Viscous boundary layer thickness at f0');
-    model.param.set('k0', '10.9845[1/m]', 'Wave number at f0');
+    model.param.set('dvisc', '0.125[m]*sqrt(4*pi*1.51*10^-5[Hz]/f0)', 'Viscous boundary layer thickness at f0');
     model.param.set('omega0', '2*pi*f0', 'Angular frequency');
-    model.param.set('T0', '1/f0[s]', 'Period');
-    model.param.set('ppl', '10', 'Points per lambda');
-    model.param.set('dt_sol', 'T0/ppl[s]', 'Solver time step (resolve f0 with T0/ppl)');
-    model.param.set('lmesh', 'lambda0/ppl[m]', 'Maximum element size acoustic mesh');
+    model.param.set('T0', '1/f0', 'Period');
+    model.param.set('dt_sol', 'T0/ppl', 'Solver time step (resolve f0 with T0/ppl)');
+    model.param.set('lmesh', 'lambda0[m]/ppl', 'Maximum element size acoustic mesh');
     model.param.set('Tend', 'Tstart+100*dt_sol', 'End time for post processing');
     model.param.set('d_r', 'sqrt(d_h^2/POA) [m]', 'Resonator diameter');
-    model.param.set('yPlane1', '0.07[m]', 'Distance to plane 1');
-    model.param.set('yPlane2', '0.0254[m]', 'Distance to plane 2');
-    model.param.set('POA', '0.0366', 'Percentage of open area');
+   
 %% Geometry
     model.modelNode.create('comp1');
 
@@ -286,7 +285,7 @@ import com.comsol.model.util.*
     model.cpl('aveop2').label('Average 2 - Plane multiphysics');
     model.cpl('aveop2').set('axisym', true);
     model.cpl('aveop3').label('Average 3 - Plane acoustics');
-    model.cpl('aveop3').set('axisym', true);
+    model.cpl('aveop3').set('axisym', true);    
 %% Mesh
     model.mesh('mesh1').create('map1', 'Map');
     model.mesh('mesh1').create('ftri1', 'FreeTri');
@@ -304,7 +303,11 @@ import com.comsol.model.util.*
     model.mesh('mesh1').feature('map1').feature('size1').set('hauto', 2);
     model.mesh('mesh1').feature('map1').feature('size1').set('custom', 'on');
     model.mesh('mesh1').feature('map1').feature('size1').set('hmaxactive', true);
-    model.mesh('mesh1').feature('map1').feature('size1').set('hmax', 'c0*dt_sol/5');
+    model.mesh('mesh1').feature('map1').feature('size1').set('hmax', 'lmesh');
+    model.mesh('mesh1').feature('map1').create('dis1', 'Distribution');
+    model.mesh('mesh1').feature('map1').feature('dis1').selection.set([8]);
+    model.mesh('mesh1').feature('map1').feature('dis1').set('numelem', 3);
+  
     model.mesh('mesh1').feature('ftri1').feature('size1').set('custom', 'on');
     model.mesh('mesh1').feature('ftri1').feature('size1').set('hminactive', true);
     model.mesh('mesh1').feature('ftri1').feature('size1').set('hmaxactive', true);
@@ -316,12 +319,11 @@ import com.comsol.model.util.*
     model.mesh('mesh1').feature('ftri1').feature('size1').set('hnarrowactive', false);
     model.mesh('mesh1').feature('ftri1').feature('size1').set('hmin', 'dvisc');
     model.mesh('mesh1').feature('ftri1').feature('size1').set('hmax', 'dvisc*24');
+    
     model.mesh('mesh1').feature('ftri1').feature('size1').set('hcurveactive', false);
     model.mesh('mesh1').feature('ftri1').feature('size2').set('custom', 'on');
-    model.mesh('mesh1').feature('ftri1').feature('size2').set('hminactive', true);
     model.mesh('mesh1').feature('ftri1').feature('size2').set('hmaxactive', true);
-    model.mesh('mesh1').feature('ftri1').feature('size2').set('hgrad', '1.1');
-    model.mesh('mesh1').feature('ftri1').feature('size2').set('hmin', 'dvisc/2');
+    model.mesh('mesh1').feature('ftri1').feature('size2').set('hgrad', '1.05');
     model.mesh('mesh1').feature('ftri1').feature('size2').set('hmax', 'dvisc');
     model.mesh('mesh1').feature('ftri1').feature('size2').set('hgradactive', true);
     model.mesh('mesh1').run;
@@ -416,59 +418,7 @@ import com.comsol.model.util.*
     model.result.numerical('int1').set('probetag', 'none');
     model.result.numerical('int2').selection.set([6 14]);
     model.result.numerical('int2').set('probetag', 'none');
-    model.result.create('pg1', 'PlotGroup2D');
-    model.result.create('pg2', 'PlotGroup1D');
-    model.result.create('pg3', 'PlotGroup2D');
-    model.result.create('pg6', 'PlotGroup1D');
-    model.result.create('pg8', 'PlotGroup2D');
-    model.result.create('pg14', 'PlotGroup3D');
-    model.result.create('pg16', 'PlotGroup3D');
-    model.result.create('pg15', 'PlotGroup1D');
-    model.result('pg1').create('surf1', 'Surface');
-    model.result('pg1').create('surf2', 'Surface');
-    model.result('pg2').create('ptgr2', 'PointGraph');
-    model.result('pg2').create('ptgr3', 'PointGraph');
-    model.result('pg2').feature('ptgr2').set('data', 'dset1');
-    model.result('pg2').feature('ptgr2').selection.set([1 2 3 4]);
-    model.result('pg2').feature('ptgr3').set('data', 'dset1');
-    model.result('pg2').feature('ptgr3').selection.set([5 6 14 15]);
-    model.result('pg3').create('surf1', 'Surface');
-    model.result('pg3').create('surf2', 'Surface');
-    model.result('pg6').create('ptgr1', 'PointGraph');
-    model.result('pg6').feature('ptgr1').selection.set([2 3]);
-    model.result('pg8').create('surf1', 'Surface');
-    model.result('pg14').create('vol1', 'Volume');
-    model.result('pg14').create('vol2', 'Volume');
-    model.result('pg16').create('vol1', 'Volume');
-    model.result('pg15').create('glob1', 'Global');
-    model.result('pg15').create('glob2', 'Global');
-    model.result.export.create('anim1', 'Animation');
-    model.result.export.create('anim2', 'Animation');
-    model.result.export.create('anim3', 'Animation');
-
-    model.study('std1').feature('time').set('probefreq', 'tout');
-    model.study('std1').feature('time').set('tlist', 'range(0,dt_sol,0.02)');
-
-    model.sol('sol1').attach('std1');
-    model.sol('sol1').feature('v1').set('clist', {'range(0,dt_sol,0.02)'});
-    model.sol('sol1').feature('t1').set('probefreq', 'tout');
-    model.sol('sol1').feature('t1').set('estrat', 'exclude');
-    model.sol('sol1').feature('t1').set('tlist', 'range(0,dt_sol,0.02)');
-    model.sol('sol1').feature('t1').set('timemethod', 'genalpha');
-    model.sol('sol1').feature('t1').set('atolglobal', '5.0E-4');
-    model.sol('sol1').feature('t1').feature('fc1').set('jtech', 'once');
-    model.sol('sol1').feature('t1').feature('fc1').set('maxiter', '6');
-%% Ready to run
-    model.sol('sol1').runAll;
-%% Set Results
-    model.result.dataset('rev1').label('Revolution 2D');
-    model.result.dataset('rev1').set('revangle', '225');
-    model.result.dataset('rev1').set('startangle', '-90');
-    model.result.dataset('rev1').set('genpoints', {'0' '0'; '0' '1'});
-    model.result.dataset('rev2').label('Revolution 2D 1');
-    model.result.dataset('rev2').set('revangle', '225');
-    model.result.dataset('rev2').set('startangle', '-90');
-    model.result.dataset('rev2').set('genpoints', {'0' '0'; '0' '1'});
+    
     model.result.numerical('pev1').label('Point Evaluation: RMS Incident');
     model.result.numerical('pev1').set('descr', {'Incident pressure'});
     model.result.numerical('pev1').set('table', 'tbl1');
@@ -481,7 +431,7 @@ import com.comsol.model.util.*
     model.result.numerical('pev2').set('table', 'tbl2');
     model.result.numerical('pev2').set('unit', {'Pa'});
     model.result.numerical('pev2').set('dataseries', 'rms');
-    model.result.numerical('pev2').set('expr', {'p2-Pin'});
+    model.result.numerical('pev2').set('expr', {'Pin-p2'});
     model.result.numerical('gev3').label('P Liner');
     model.result.numerical('gev3').set('descr', {''});
     model.result.numerical('gev3').set('table', 'tbl3');
@@ -532,7 +482,7 @@ import com.comsol.model.util.*
     model.result.numerical('pev8').set('descr', {''});
     model.result.numerical('pev8').set('table', 'tbl14');
     model.result.numerical('pev8').set('unit', {'Pa'});
-    model.result.numerical('pev8').set('expr', {'p2-Pin'});
+    model.result.numerical('pev8').set('expr', {'Pin-p2'});
     model.result.numerical('gev7').label('P plane ac');
     model.result.numerical('gev7').set('descr', {'Average Pressure Plane Acoustic'});
     model.result.numerical('gev7').set('table', 'tbl15');
@@ -557,6 +507,63 @@ import com.comsol.model.util.*
     model.result.numerical('int2').set('intsurface', true);
     model.result.numerical('int2').set('expr', {'exp(-i*omega0*t)*w'});
     model.result.numerical('int2').set('unit', {''});
+   
+    model.result.create('pg1', 'PlotGroup2D');
+    model.result.create('pg2', 'PlotGroup1D');
+    model.result.create('pg3', 'PlotGroup2D');
+    model.result.create('pg6', 'PlotGroup1D');
+    model.result.create('pg8', 'PlotGroup2D');
+    model.result.create('pg14', 'PlotGroup3D');
+    model.result.create('pg16', 'PlotGroup3D');
+    model.result.create('pg15', 'PlotGroup1D');
+    model.result.create('pg17', 'PlotGroup1D');
+    model.result('pg1').create('surf1', 'Surface');
+    model.result('pg1').create('surf2', 'Surface');
+    model.result('pg2').create('ptgr2', 'PointGraph');
+    model.result('pg17').create('ptgr3', 'PointGraph');
+    model.result('pg2').feature('ptgr2').set('data', 'dset1');
+    model.result('pg2').feature('ptgr2').selection.set([1 2 3 4]);
+    model.result('pg17').feature('ptgr3').set('data', 'dset1');
+    model.result('pg17').feature('ptgr3').selection.set([5 6 14 15]);
+    model.result('pg3').create('surf1', 'Surface');
+    model.result('pg3').create('surf2', 'Surface');
+    model.result('pg6').create('ptgr1', 'PointGraph');
+    model.result('pg6').feature('ptgr1').selection.set([2 3]);
+    model.result('pg8').create('surf1', 'Surface');
+    model.result('pg14').create('vol1', 'Volume');
+    model.result('pg14').create('vol2', 'Volume');
+    model.result('pg16').create('vol1', 'Volume');
+    model.result('pg15').create('glob1', 'Global');
+    model.result('pg15').create('glob2', 'Global');
+    model.result.export.create('anim1', 'Animation');
+    model.result.export.create('anim2', 'Animation');
+    model.result.export.create('anim3', 'Animation');
+
+    model.study('std1').feature('time').set('probefreq', 'tout');
+    model.study('std1').feature('time').set('tlist', 'range(0,dt_sol,Tend)');
+
+    model.sol('sol1').attach('std1');
+    model.sol('sol1').feature('v1').set('clist', {'range(0,dt_sol,Tend)'});
+    model.sol('sol1').feature('t1').set('probefreq', 'tout');
+    model.sol('sol1').feature('t1').set('estrat', 'exclude');
+    model.sol('sol1').feature('t1').set('tlist', 'range(0,dt_sol,Tend)');
+    model.sol('sol1').feature('t1').set('timemethod', 'genalpha');
+    model.sol('sol1').feature('t1').set('atolglobal', '5.0E-4');
+    model.sol('sol1').feature('t1').feature('fc1').set('jtech', 'once');
+    model.sol('sol1').feature('t1').feature('fc1').set('maxiter', '6');
+%% Ready to run
+
+    model.sol('sol1').runAll;
+%% Set Results
+    model.result.dataset('rev1').label('Revolution 2D');
+    model.result.dataset('rev1').set('revangle', '225');
+    model.result.dataset('rev1').set('startangle', '-90');
+    model.result.dataset('rev1').set('genpoints', {'0' '0'; '0' '1'});
+    model.result.dataset('rev2').label('Revolution 2D 1');
+    model.result.dataset('rev2').set('revangle', '225');
+    model.result.dataset('rev2').set('startangle', '-90');
+    model.result.dataset('rev2').set('genpoints', {'0' '0'; '0' '1'});
+  
     model.result.numerical('pev1').setResult;
     model.result.numerical('pev2').setResult;
     model.result.numerical('gev3').setResult;
@@ -601,19 +608,21 @@ import com.comsol.model.util.*
     model.result('pg2').feature('ptgr2').label('Laminar Flow domain');
     model.result('pg2').feature('ptgr2').set('descr', 'Pressure');
     model.result('pg2').feature('ptgr2').set('legends', {'Back cavity' 'Hole inside edge' 'Hole outside edge' 'Multiphysics boundary'});
-    model.result('pg2').feature('ptgr2').set('linemarker', 'cycle');
-    model.result('pg2').feature('ptgr2').set('markerpos', 'datapoints');
     model.result('pg2').feature('ptgr2').set('legend', true);
     model.result('pg2').feature('ptgr2').set('legendmethod', 'manual');
     model.result('pg2').feature('ptgr2').set('expr', 'p');
-    model.result('pg2').feature('ptgr3').label('Pressure acoustics domain');
-    model.result('pg2').feature('ptgr3').set('legends', {'Acoustics Plane' 'Inlet' 'Mic 2 near' 'Mic 1 far' ''});
-    model.result('pg2').feature('ptgr3').set('linemarker', 'cycle');
-    model.result('pg2').feature('ptgr3').set('markerpos', 'datapoints');
-    model.result('pg2').feature('ptgr3').set('legend', true);
-    model.result('pg2').feature('ptgr3').set('linewidth', '2');
-    model.result('pg2').feature('ptgr3').set('legendmethod', 'manual');
-    model.result('pg2').feature('ptgr3').set('expr', 'comp1.actd.p_t');
+    
+    model.result('pg17').label('Pressure Acoustics domain');
+    model.result('pg17').set('data', 'none');
+    model.result('pg17').set('xlabel', 'Time (s)');
+    model.result('pg17').set('xlabelactive', false);
+    model.result('pg17').feature('ptgr3').label('Pressure acoustics domain');
+    model.result('pg17').feature('ptgr3').set('descr', 'Pressure');
+    model.result('pg17').feature('ptgr3').set('legends', {'Acoustics Plane' 'Inlet' 'Mic 2 near' 'Mic 1 far' ''});
+    model.result('pg17').feature('ptgr3').set('legend', true);
+    model.result('pg17').feature('ptgr3').set('linewidth', '2');
+    model.result('pg17').feature('ptgr3').set('legendmethod', 'manual');
+    model.result('pg17').feature('ptgr3').set('expr', 'comp1.actd.p_t');
     model.result('pg3').label('Velocity');
     model.result('pg3').set('axisprecision', '2');
     model.result('pg3').set('axisactive', 'on');
@@ -622,19 +631,19 @@ import com.comsol.model.util.*
     model.result('pg3').set('axiscommonexp', false);
     model.result('pg3').set('looplevel', {'11'});
     model.result('pg3').feature('surf1').set('descractive', true);
-    model.result('pg3').feature('surf1').set('rangedatamax', '20');
+    model.result('pg3').feature('surf1').set('rangedatamax', '30');
     model.result('pg3').feature('surf1').set('rangedataactive', 'on');
     model.result('pg3').feature('surf1').set('descr', 'Velocity (CFD)');
-    model.result('pg3').feature('surf1').set('rangecolormax', '20');
+    model.result('pg3').feature('surf1').set('rangecolormax', '30');
     model.result('pg3').feature('surf1').set('unit', 'm/s');
     model.result('pg3').feature('surf1').set('rangecoloractive', 'on');
     model.result('pg3').feature('surf1').set('expr', 'abs(w)');
     model.result('pg3').feature('surf1').set('resolution', 'normal');
     model.result('pg3').feature('surf2').set('descractive', true);
-    model.result('pg3').feature('surf2').set('rangedatamax', '20');
+    model.result('pg3').feature('surf2').set('rangedatamax', '30');
     model.result('pg3').feature('surf2').set('rangedataactive', 'on');
     model.result('pg3').feature('surf2').set('descr', 'Velocity (Acoustics)');
-    model.result('pg3').feature('surf2').set('rangecolormax', '20');
+    model.result('pg3').feature('surf2').set('rangecolormax', '30');
     model.result('pg3').feature('surf2').set('unit', 'm/s^2');
     model.result('pg3').feature('surf2').set('rangecoloractive', 'on');
     model.result('pg3').feature('surf2').set('expr', 'actd.a_inst/2/pi/omega0');
@@ -788,5 +797,5 @@ mkdir(pathD,folder)
     Results(:,:,12)=load([pathD num2str(freq) 'Hz\VLine.txt']); %Velocity on the liner surface
 str=[pathD num2str(freq) 'Hz\Results_' num2str(freq) 'Hz']
     save(str,'Results')
-   
+  mphsave(model,['Solved_' num2str(freq) 'Hz'])  
 end
