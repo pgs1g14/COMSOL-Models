@@ -1,0 +1,77 @@
+%% Run FEM Model
+% The parametric model choosing the start stop and frequency step
+
+clear all
+clc
+tic
+%-------------Choose your parameters to simulate--------------------
+freq=600:250:5100; %Frequencies to solve
+cycles=5; %Cycles of the transient regime
+%Liner geometry
+d_h=0.00099; %Hole diameter 1,0614 mm - on the holder, Hole diameter 1,5022 mm - flanged
+POA=0.0366; %percentage of open area of the sample in the holder
+h_h=0.000635; %Liner slit thickness [m]
+h_r=0.019; %Liner cavity depth - resonator height [m]
+
+%-------------------------------------------------------------------
+
+hi = waitbar(0,'Calculating FEM model, parametric on frequency.');
+
+for i=1:1:length(freq)
+    waitbar(i/length(freq),hi)
+    freq(i)
+    %Calls the numerical model using COMSOL
+    LinerAxi_PT_155dB_parametric_v5_2(d_h,POA,h_h,h_r,cycles,freq(i)) %Run the model and extract results
+    % Load the Time domain results
+    DataPath=['..\Data\' num2str(freq(i)) 'Hz\Results_' num2str(freq(i)) 'Hz.mat'];
+    eval(['data=load(DataPath)'])
+    %Calculate the impedance and save the figures to analysis
+    for cycles=10:-1:5
+    ImpedanceCalc(cycles,freq(i),load(DataPath))
+    end
+    close(figure(900))
+    ImpPath=['..\Data\' num2str(freq(i)) 'Hz\Impedances_' num2str(freq(i)) 'Hz.mat'];
+    imp=load(ImpPath)
+    % Create a vector with the FFT(Liner) impedance result
+    Num(i,1)=freq(i);
+    Num(i,2)=imp.Z(1);
+    % Plot the intermediate liner results
+    figure(30)
+    plot(Num(i,1),real(Num(i,2)),'-ob')
+    hold on;
+    plot(Num(i,1),imag(Num(i,2)),'-xb')
+end
+close(hi)
+
+%% Plot Numerical x Experimental results
+%Export Experimental Result
+Exp=load('C:\Local\Pablo\PIM measurements\Post Process\Sample Holder\Measurement 14.08.2015\PureTone Process\PT_IMP.mat')
+h=figure(1)
+hold on;
+plot(Exp.PT_IMP(:,1),Exp.PT_IMP(:,12),'-or')
+plot(Num(:,1),real(Num(:,2)),'-ob')
+hold on;
+plot(Exp.PT_IMP(:,1),Exp.PT_IMP(:,13),'-xr')
+plot(Num(:,1),imag(Num(:,2)),'-xb')
+legend('\theta - Exper. Sample Holder','\theta - Numerical','\chi - Exper. Sample Holder','\chi - Numerical')
+   string = ['..\Data\Validation2ndTry']
+                saveas(h,[string '.eps'],'epsc2')
+                saveas(h,[string '.fig'])
+                saveas(h,[string '.png'])
+toc
+
+for i=1:1:length(freq) 
+    ImpPath=['..\Data\' num2str(freq(i)) 'Hz\Impedances_' num2str(freq(i)) 'Hz.mat'];
+    imp=load(ImpPath)
+    % Create a vector with the FFT(Liner) impedance result
+    Num(i,1)=freq(i);
+    Num(i,8)=imp.Z(8);
+end
+
+figure(1)    
+plot(Num(:,1),real(Num(:,9)),'-og')
+hold on;
+plot(Num(:,1),imag(Num(:,9)),'-xg')
+
+
+
